@@ -6,39 +6,36 @@ using Rebus.Pipeline;
 
 namespace Rebus.Config
 {
+    /// <summary>
+    /// Convenience configuration extensions for adding callbacks to various Rebus events
+    /// </summary>
     public static class EventConfigurationExtensions
     {
-        public static RebusConfigurer Events(this RebusConfigurer configurer, Action<EventConfigurer> eventConfigurer)
+        /// <summary>
+        /// Configures event callbacks
+        /// </summary>
+        public static RebusConfigurer Events(this RebusConfigurer configurer, Action<EventConfigurer> configureEvents)
         {
+            if (configurer == null) throw new ArgumentNullException(nameof(configurer));
+            if (configureEvents == null) throw new ArgumentNullException(nameof(configureEvents));
+
             configurer.Options(o =>
             {
                 if (!o.Has<EventHooks>())
                 {
-                    Console.WriteLine("REGISTERING EVENT HOOKS");
                     o.Register(c => new EventHooks());
                 }
 
                 o.Decorate(c =>
                 {
-                    Console.WriteLine("APPLYING DECORATOR TO CALL BACK TO THE EVENT CONFIGURER");
-                    var eventHooks = c.Get<EventHooks>();
                     var eventConfigurerInstance = new EventConfigurer();
-                    eventConfigurer(eventConfigurerInstance);
+                    configureEvents(eventConfigurerInstance);
 
+                    var eventHooks = c.Get<EventHooks>();
                     eventConfigurerInstance.CopyTo(eventHooks);
 
                     return eventHooks;
                 });
-
-                o.Decorate(c =>
-                {
-                    Console.WriteLine("INSTANTIATING EVENT HOOKS");
-                    c.Get<EventHooks>();
-                    return c.Get<IBus>();
-                });
-
-
-
 
                 o.Decorate<IPipeline>(c =>
                 {
