@@ -20,4 +20,6 @@ The following events are available:
 
 * `BeforeMessageSent`: Raised before each message is sent, allowing for mutating the message and even replacing it with something else if you want
 * `AfterMessageSent`: Raised after each message has been sent (or added to the transaction's list of outgoing messages)
+* `BeforeMessageHandled`: Raised before an incoming message is dispatched to handlers
+* `AfterMessageHandled`: Raised after an incoming message is dispatched to handlers
 * _more to come_

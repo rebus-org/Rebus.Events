@@ -1,28 +1,14 @@
-﻿using System;
-using NUnit.Framework;
-using Rebus.Activation;
+﻿using NUnit.Framework;
 using Rebus.Config;
-using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
-using Rebus.Transport.InMem;
+
 #pragma warning disable 1998
 
-namespace Rebus.Events.Tests
+namespace Rebus.Events.Tests.Events
 {
     [TestFixture]
-    public class TestMessageSent : FixtureBase
+    public class TestMessageSent : BusFixtureBase
     {
-        InMemNetwork _network;
-        BuiltinHandlerActivator _activator;
-
-        protected override void SetUp()
-        {
-            _activator = new BuiltinHandlerActivator();
-            _network = new InMemNetwork();
-
-            Using(_activator);
-        }
-
         [Test]
         public void IsCalledAroundMessageSend()
         {
@@ -44,7 +30,7 @@ namespace Rebus.Events.Tests
                 });
             });
 
-            _activator.Handle<string>(async (bus, context, message) =>
+            Activator.Handle<string>(async (bus, context, message) =>
             {
                 if (!context.Headers.ContainsKey("before!"))
                 {
@@ -59,21 +45,9 @@ namespace Rebus.Events.Tests
                 counter.Decrement();
             });
 
-            _activator.Bus.SendLocal("hej med dig min ven!!!!");
+            Activator.Bus.SendLocal("hej med dig min ven!!!!");
 
             counter.WaitForResetEvent(2);
-        }
-
-        void ConfigureBus(Action<RebusConfigurer> configure)
-        {
-            var rebusConfigurer = Configure.With(_activator)
-                .Transport(t => t.UseInMemoryTransport(_network, "event-test"));
-
-            configure(rebusConfigurer);
-
-            rebusConfigurer
-                .Options(o => o.LogPipeline(true))
-                .Start();
         }
     }
 }

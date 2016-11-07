@@ -42,8 +42,11 @@
   <ItemGroup>
     <Compile Include="Config\EventConfigurer.cs" />
     <Compile Include="Config\EventConfigurationExtensions.cs" />
+    <Compile Include="Config\MessageHandledEventHandler.cs" />
+    <Compile Include="Config\MessageHandledEventHandlerArgs.cs" />
     <Compile Include="Events\EventHooks.cs" />
     <Compile Include="Config\MessageSentEventHandler.cs" />
+    <Compile Include="Events\Steps\MessageReceivedStep.cs" />
     <Compile Include="Events\Steps\MessageSentStep.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

@@ -58,7 +58,9 @@
     <Reference Include="System.Core" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="TestMessageSent.cs" />
+    <Compile Include="BusFixtureBase.cs" />
+    <Compile Include="Events\TestMessageHandled.cs" />
+    <Compile Include="Events\TestMessageSent.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="TestReadmeCode.cs" />
   </ItemGroup>
