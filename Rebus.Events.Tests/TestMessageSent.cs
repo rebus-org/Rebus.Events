@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Collections.Generic;
 using NUnit.Framework;
 using Rebus.Activation;
-using Rebus.Bus;
 using Rebus.Config;
-using Rebus.Pipeline;
-using Rebus.Pipeline.Send;
 using Rebus.Tests.Contracts;
 using Rebus.Tests.Contracts.Utilities;
 using Rebus.Transport.InMem;
