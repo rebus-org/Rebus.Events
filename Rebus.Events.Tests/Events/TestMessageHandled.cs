@@ -71,7 +71,7 @@ namespace Rebus.Events.Tests.Events
 
             Activator.Handle<string>(async str =>
             {
-                throw new AccessViolationException("NO ACCESS!!");
+                throw new AbandonedMutexException("NO ACCESS!!");
             });
 
             Activator.Handle<DateTime>(async dateTime =>
