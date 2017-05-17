@@ -8,8 +8,8 @@
 
 * Update to Rebus 3
 
-## 4.0.0-b01
+## 4.0.0-b02
 
 * Update to Rebus 4
 * Add .NET Core support (netstandard1.6)
-* Update deps to b06
+* Update deps to b09
