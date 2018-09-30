@@ -9,33 +9,28 @@ using Rebus.Pipeline;
 
 namespace Rebus.Events.Steps
 {
-    class MessageReceivedStep : IIncomingStep, IInitializable
+    class MessageReceivedStep : IIncomingStep
     {
         readonly List<MessageHandledEventHandler> _beforeMessageHandled;
         readonly List<MessageHandledEventHandler> _afterMessageHandled;
-        readonly Func<IBus> _busFactory;
-        IBus _bus;
+        readonly Lazy<IBus> _bus;
 
         public MessageReceivedStep(List<MessageHandledEventHandler> beforeMessageHandled, List<MessageHandledEventHandler> afterMessageHandled, Func<IBus> busFactory)
         {
             _beforeMessageHandled = beforeMessageHandled.ToList();
             _afterMessageHandled = afterMessageHandled.ToList();
-            _busFactory = busFactory;
-        }
-
-        public void Initialize()
-        {
-            _bus = _busFactory();
+            _bus = new Lazy<IBus>(busFactory);
         }
 
         public async Task Process(IncomingStepContext context, Func<Task> next)
         {
             var message = context.Load<Message>();
             var args = new MessageHandledEventHandlerArgs();
+            var bus = _bus.Value;
 
             foreach (var e in _beforeMessageHandled)
             {
-                e(_bus, message.Headers, message.Body, context, args);
+                e(bus, message.Headers, message.Body, context, args);
             }
 
             try
@@ -44,7 +39,7 @@ namespace Rebus.Events.Steps
 
                 foreach (var e in _afterMessageHandled)
                 {
-                    e(_bus, message.Headers, message.Body, context, args);
+                    e(bus, message.Headers, message.Body, context, args);
                 }
             }
             catch (Exception exception)
@@ -53,7 +48,7 @@ namespace Rebus.Events.Steps
 
                 foreach (var e in _afterMessageHandled)
                 {
-                    e(_bus, message.Headers, message.Body, context, args);
+                    e(bus, message.Headers, message.Body, context, args);
                 }
 
                 if (!args.IgnoreException)
