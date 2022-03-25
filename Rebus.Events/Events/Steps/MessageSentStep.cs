@@ -10,23 +10,17 @@ using Rebus.Pipeline;
 namespace Rebus.Events.Steps
 {
     [StepDocumentation("Invokes Before- and AfterMessageSent handlers")]
-    class MessageSentStep : IOutgoingStep, IInitializable
+    class MessageSentStep : IOutgoingStep
     {
-        readonly Func<IBus> _busFactory;
         readonly List<MessageSentEventHandler> _beforeMessageSent;
         readonly List<MessageSentEventHandler> _afterMessageSent;
-        IBus _bus;
+        readonly Lazy<IBus> _bus;
 
         public MessageSentStep(List<MessageSentEventHandler> beforeMessageSent, List<MessageSentEventHandler> afterMessageSent, Func<IBus> busFactory)
         {
-            _busFactory = busFactory;
+            _bus = new Lazy<IBus>(busFactory);
             _beforeMessageSent = beforeMessageSent.ToList();
             _afterMessageSent = afterMessageSent.ToList();
-        }
-
-        public void Initialize()
-        {
-            _bus = _busFactory();
         }
 
         public async Task Process(OutgoingStepContext context, Func<Task> next)
@@ -35,7 +29,7 @@ namespace Rebus.Events.Steps
 
             foreach (var e in _beforeMessageSent)
             {
-                e(_bus, message.Headers, message.Body, context);
+                e(_bus.Value, message.Headers, message.Body, context);
             }
 
             try
@@ -44,7 +38,7 @@ namespace Rebus.Events.Steps
 
                 foreach (var e in _afterMessageSent)
                 {
-                    e(_bus, message.Headers, message.Body, context);
+                    e(_bus.Value, message.Headers, message.Body, context);
                 }
             }
             catch (Exception exception)
@@ -53,7 +47,7 @@ namespace Rebus.Events.Steps
 
                 foreach (var e in _afterMessageSent)
                 {
-                    e(_bus, message.Headers, message.Body, context);
+                    e(_bus.Value, message.Headers, message.Body, context);
                 }
 
                 throw;

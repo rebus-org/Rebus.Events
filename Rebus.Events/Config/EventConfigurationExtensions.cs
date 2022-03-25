@@ -1,9 +1,11 @@
 using System;
+using System.Linq;
 using Rebus.Bus;
 using Rebus.Events;
 using Rebus.Events.Steps;
 using Rebus.Pipeline;
 using Rebus.Pipeline.Receive;
+using Rebus.Pipeline.Send;
 
 namespace Rebus.Config
 {
@@ -32,9 +34,16 @@ namespace Rebus.Config
                         var eventHooks = c.Get<EventHooks>();
 
                         var step = new MessageSentStep(eventHooks.BeforeMessageSent, eventHooks.AfterMessageSent, c.Get<IBus>);
-
-                        return new PipelineStepConcatenator(pipeline)
-                            .OnSend(step, PipelineAbsolutePosition.Front);
+                        var serviceProviderStepType = Type.GetType("Rebus.ServiceProvider.ServiceProviderProviderStep, Rebus.ServiceProvider");
+                        if (serviceProviderStepType!=null && pipeline.SendPipeline().Any(s => s.GetType() == serviceProviderStepType))
+                        {
+                            return new PipelineStepInjector(pipeline)
+                                .OnSend(step, PipelineRelativePosition.After, serviceProviderStepType);
+                        } else 
+                        {
+                            return new PipelineStepConcatenator(pipeline)
+                                .OnSend(step, PipelineAbsolutePosition.Front);
+                        }
                     });
 
                     o.Decorate<IPipeline>(c =>
