@@ -5,7 +5,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>Rebus</RootNamespace>
     <AssemblyName>Rebus.Events</AssemblyName>
-    <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <GenerateAssemblyInfo>false</GenerateAssemblyInfo>
     <Authors>mookid8000</Authors>
     <PackageLicenseUrl>https://raw.githubusercontent.com/rebus-org/Rebus/master/LICENSE.md</PackageLicenseUrl>
@@ -19,10 +19,14 @@
 	<PackageIcon>little_rebusbus2_copy-200x200.png</PackageIcon>
  </PropertyGroup>
  <ItemGroup>
+   <Compile Remove="Properties\AssemblyInfo.cs" />
+ </ItemGroup>
+ <ItemGroup>
 	 <None Include="..\artwork\little_rebusbus2_copy-200x200.png">
 		 <Pack>True</Pack>
 		 <PackagePath></PackagePath>
 	 </None>
+	 <None Include="Properties\AssemblyInfo.cs" />
  </ItemGroup>
   <ItemGroup>
     <PackageReference Include="rebus" Version="[6.0.0,)" />
