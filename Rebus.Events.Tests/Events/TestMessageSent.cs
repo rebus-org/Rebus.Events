@@ -4,50 +4,49 @@ using Rebus.Tests.Contracts.Utilities;
 
 #pragma warning disable 1998
 
-namespace Rebus.Events.Tests.Events
+namespace Rebus.Events.Tests.Events;
+
+[TestFixture]
+public class TestMessageSent : BusFixtureBase
 {
-    [TestFixture]
-    public class TestMessageSent : BusFixtureBase
+    [Test]
+    public void IsCalledAroundMessageSend()
     {
-        [Test]
-        public void IsCalledAroundMessageSend()
+        var counter = new SharedCounter(1);
+
+        ConfigureBus(c =>
         {
-            var counter = new SharedCounter(1);
-
-            ConfigureBus(c =>
+            c.Events(e =>
             {
-                c.Events(e =>
+                e.BeforeMessageSent += (bus, headers, message, context) =>
                 {
-                    e.BeforeMessageSent += (bus, headers, message, context) =>
-                    {
-                        headers["before!"] = "hej";
-                    };
+                    headers["before!"] = "hej";
+                };
 
-                    e.AfterMessageSent += (bus, headers, message, context) =>
-                    {
-                        headers["after!"] = "hej igen";
-                    };
-                });
+                e.AfterMessageSent += (bus, headers, message, context) =>
+                {
+                    headers["after!"] = "hej igen";
+                };
             });
+        });
 
-            Activator.Handle<string>(async (bus, context, message) =>
+        Handle<string>(async (bus, context, message) =>
+        {
+            if (!context.Headers.ContainsKey("before!"))
             {
-                if (!context.Headers.ContainsKey("before!"))
-                {
-                    throw new AssertionException("Did not find 'before!' key in headers");
-                }
+                throw new AssertionException("Did not find 'before!' key in headers");
+            }
 
-                if (context.Headers.ContainsKey("after!"))
-                {
-                    throw new AssertionException("Found unexpected 'after!' key in headers");
-                }
+            if (context.Headers.ContainsKey("after!"))
+            {
+                throw new AssertionException("Found unexpected 'after!' key in headers");
+            }
 
-                counter.Decrement();
-            });
+            counter.Decrement();
+        });
 
-            Activator.Bus.SendLocal("hej med dig min ven!!!!");
+        Bus.SendLocal("hej med dig min ven!!!!");
 
-            counter.WaitForResetEvent(2);
-        }
+        counter.WaitForResetEvent(2);
     }
 }

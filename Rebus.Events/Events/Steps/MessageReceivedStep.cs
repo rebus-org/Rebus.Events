@@ -7,54 +7,53 @@ using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Pipeline;
 
-namespace Rebus.Events.Steps
-{
-    class MessageReceivedStep : IIncomingStep
-    {
-        readonly List<MessageHandledEventHandler> _beforeMessageHandled;
-        readonly List<MessageHandledEventHandler> _afterMessageHandled;
-        readonly Lazy<IBus> _bus;
+namespace Rebus.Events.Steps;
 
-        public MessageReceivedStep(List<MessageHandledEventHandler> beforeMessageHandled, List<MessageHandledEventHandler> afterMessageHandled, Func<IBus> busFactory)
+class MessageReceivedStep : IIncomingStep
+{
+    readonly List<MessageHandledEventHandler> _beforeMessageHandled;
+    readonly List<MessageHandledEventHandler> _afterMessageHandled;
+    readonly Lazy<IBus> _lazyBus;
+
+    public MessageReceivedStep(List<MessageHandledEventHandler> beforeMessageHandled, List<MessageHandledEventHandler> afterMessageHandled, Func<IBus> lazyBus)
+    {
+        _beforeMessageHandled = beforeMessageHandled.ToList();
+        _afterMessageHandled = afterMessageHandled.ToList();
+        _lazyBus = new(lazyBus);
+    }
+
+    public async Task Process(IncomingStepContext context, Func<Task> next)
+    {
+        var message = context.Load<Message>();
+        var args = new MessageHandledEventHandlerArgs();
+        var bus = _lazyBus.Value;
+
+        foreach (var e in _beforeMessageHandled)
         {
-            _beforeMessageHandled = beforeMessageHandled.ToList();
-            _afterMessageHandled = afterMessageHandled.ToList();
-            _bus = new Lazy<IBus>(busFactory);
+            e(bus, message.Headers, message.Body, context, args);
         }
 
-        public async Task Process(IncomingStepContext context, Func<Task> next)
+        try
         {
-            var message = context.Load<Message>();
-            var args = new MessageHandledEventHandlerArgs();
-            var bus = _bus.Value;
+            await next();
 
-            foreach (var e in _beforeMessageHandled)
+            foreach (var e in _afterMessageHandled)
+            {
+                e(bus, message.Headers, message.Body, context, args);
+            }
+        }
+        catch (Exception exception)
+        {
+            context.Save(exception);
+
+            foreach (var e in _afterMessageHandled)
             {
                 e(bus, message.Headers, message.Body, context, args);
             }
 
-            try
+            if (!args.IgnoreException)
             {
-                await next();
-
-                foreach (var e in _afterMessageHandled)
-                {
-                    e(bus, message.Headers, message.Body, context, args);
-                }
-            }
-            catch (Exception exception)
-            {
-                context.Save(exception);
-
-                foreach (var e in _afterMessageHandled)
-                {
-                    e(bus, message.Headers, message.Body, context, args);
-                }
-
-                if (!args.IgnoreException)
-                {
-                    throw;
-                }
+                throw;
             }
         }
     }

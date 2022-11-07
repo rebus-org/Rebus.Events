@@ -1,15 +1,14 @@
 ﻿using System;
 
-namespace Rebus.Config
+namespace Rebus.Config;
+
+/// <summary>
+/// Event args for message handled events
+/// </summary>
+public class MessageHandledEventHandlerArgs : EventArgs
 {
     /// <summary>
-    /// Event args for message handled events
+    /// Gets/sets whether to ignore an exception caught while dispatching the message
     /// </summary>
-    public class MessageHandledEventHandlerArgs : EventArgs
-    {
-        /// <summary>
-        /// Gets/sets whether to ignore an exception caught while dispatching the message
-        /// </summary>
-        public bool IgnoreException { get; set; }
-    }
+    public bool IgnoreException { get; set; }
 }

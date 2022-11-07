@@ -7,57 +7,51 @@ using Rebus.Config;
 using Rebus.Messages;
 using Rebus.Pipeline;
 
-namespace Rebus.Events.Steps
+namespace Rebus.Events.Steps;
+
+[StepDocumentation("Invokes Before- and AfterMessageSent handlers")]
+class MessageSentStep : IOutgoingStep
 {
-    [StepDocumentation("Invokes Before- and AfterMessageSent handlers")]
-    class MessageSentStep : IOutgoingStep, IInitializable
+    readonly Lazy<IBus> _lazyBus;
+    readonly List<MessageSentEventHandler> _beforeMessageSent;
+    readonly List<MessageSentEventHandler> _afterMessageSent;
+
+    public MessageSentStep(List<MessageSentEventHandler> beforeMessageSent, List<MessageSentEventHandler> afterMessageSent, Func<IBus> lazyBus)
     {
-        readonly Func<IBus> _busFactory;
-        readonly List<MessageSentEventHandler> _beforeMessageSent;
-        readonly List<MessageSentEventHandler> _afterMessageSent;
-        IBus _bus;
+        _lazyBus = new(lazyBus);
+        _beforeMessageSent = beforeMessageSent.ToList();
+        _afterMessageSent = afterMessageSent.ToList();
+    }
 
-        public MessageSentStep(List<MessageSentEventHandler> beforeMessageSent, List<MessageSentEventHandler> afterMessageSent, Func<IBus> busFactory)
+    public async Task Process(OutgoingStepContext context, Func<Task> next)
+    {
+        var message = context.Load<Message>();
+        var bus = _lazyBus.Value;
+        
+        foreach (var e in _beforeMessageSent)
         {
-            _busFactory = busFactory;
-            _beforeMessageSent = beforeMessageSent.ToList();
-            _afterMessageSent = afterMessageSent.ToList();
+            e(bus, message.Headers, message.Body, context);
         }
 
-        public void Initialize()
+        try
         {
-            _bus = _busFactory();
+            await next();
+
+            foreach (var e in _afterMessageSent)
+            {
+                e(bus, message.Headers, message.Body, context);
+            }
         }
-
-        public async Task Process(OutgoingStepContext context, Func<Task> next)
+        catch (Exception exception)
         {
-            var message = context.Load<Message>();
+            context.Save(exception);
 
-            foreach (var e in _beforeMessageSent)
+            foreach (var e in _afterMessageSent)
             {
-                e(_bus, message.Headers, message.Body, context);
+                e(bus, message.Headers, message.Body, context);
             }
 
-            try
-            {
-                await next();
-
-                foreach (var e in _afterMessageSent)
-                {
-                    e(_bus, message.Headers, message.Body, context);
-                }
-            }
-            catch (Exception exception)
-            {
-                context.Save(exception);
-
-                foreach (var e in _afterMessageSent)
-                {
-                    e(_bus, message.Headers, message.Body, context);
-                }
-
-                throw;
-            }
+            throw;
         }
     }
 }

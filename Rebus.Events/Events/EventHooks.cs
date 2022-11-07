@@ -1,13 +1,12 @@
 ﻿using System.Collections.Generic;
 using Rebus.Config;
 
-namespace Rebus.Events
+namespace Rebus.Events;
+
+class EventHooks
 {
-    class EventHooks
-    {
-        public readonly List<MessageSentEventHandler> BeforeMessageSent = new List<MessageSentEventHandler>();
-        public readonly List<MessageSentEventHandler> AfterMessageSent = new List<MessageSentEventHandler>();
-        public readonly List<MessageHandledEventHandler> BeforeMessageHandled = new List<MessageHandledEventHandler>();
-        public readonly List<MessageHandledEventHandler> AfterMessageHandled = new List<MessageHandledEventHandler>();
-    }
+    public readonly List<MessageSentEventHandler> BeforeMessageSent = new();
+    public readonly List<MessageSentEventHandler> AfterMessageSent = new();
+    public readonly List<MessageHandledEventHandler> BeforeMessageHandled = new();
+    public readonly List<MessageHandledEventHandler> AfterMessageHandled = new();
 }

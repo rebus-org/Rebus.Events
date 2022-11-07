@@ -12,81 +12,74 @@ using Rebus.Tests.Contracts.Utilities;
 
 #pragma warning disable 1998
 
-namespace Rebus.Events.Tests.Events
+namespace Rebus.Events.Tests.Events;
+
+[TestFixture]
+public class TestMessageHandled : BusFixtureBase
 {
-    [TestFixture]
-    public class TestMessageHandled : BusFixtureBase
+    [Test]
+    public async Task IsCalledAroundHandlingAnIncomingMessage()
     {
-        [Test]
-        public async Task IsCalledAroundHandlingAnIncomingMessage()
+        var events = new ConcurrentQueue<string>();
+
+        ConfigureBus(configurer => configurer.Events(e =>
         {
-            var events = new ConcurrentQueue<string>();
-
-            ConfigureBus(configurer => configurer.Events(e =>
+            e.BeforeMessageHandled += (bus, headers, message, context, args) =>
             {
-                e.BeforeMessageHandled += (bus, headers, message, context, args) =>
-                {
-                    events.Enqueue("BEFORE");
-                };
+                events.Enqueue("BEFORE");
+            };
 
-                e.AfterMessageHandled += (bus, headers, message, context, args) =>
-                {
-                    events.Enqueue("AFTER");
-                };
-            }));
-
-            Activator.Handle<string>(async str =>
+            e.AfterMessageHandled += (bus, headers, message, context, args) =>
             {
-                events.Enqueue("MSG!");
-            });
+                events.Enqueue("AFTER");
+            };
+        }));
 
-            await Activator.Bus.SendLocal("hej med dig min ven!!!");
-
-            await events.WaitUntil(c => c.Count == 3, timeoutSeconds: 2);
-
-            Assert.That(events, Is.EqualTo(new[]
-            {
-                "BEFORE",
-                "MSG!",
-                "AFTER"
-            }));
-        }
-
-        [Test]
-        public async Task CanBeUsedToSwallowAnException()
+        Handle<string>(async str =>
         {
-            ConfigureBus(c => c.Events(e =>
+            events.Enqueue("MSG!");
+        });
+
+        await Bus.SendLocal("hej med dig min ven!!!");
+
+        await events.WaitUntil(c => c.Count == 3, timeoutSeconds: 2);
+
+        Assert.That(events, Is.EqualTo(new[]
+        {
+            "BEFORE",
+            "MSG!",
+            "AFTER"
+        }));
+    }
+
+    [Test]
+    public async Task CanBeUsedToSwallowAnException()
+    {
+        ConfigureBus(c => c.Events(e =>
+        {
+            e.AfterMessageHandled += (bus, headers, message, context, args) =>
             {
-                e.AfterMessageHandled += (bus, headers, message, context, args) =>
+                var exception = context.Load<Exception>();
+                if (exception == null) return;
+
+                if (exception is AbandonedMutexException)
                 {
-                    var exception = context.Load<Exception>();
-                    if (exception == null) return;
+                    args.IgnoreException = true;
+                }
+            };
+        }));
 
-                    if (exception is AbandonedMutexException)
-                    {
-                        args.IgnoreException = true;
-                    }
-                };
-            }));
+        Handle<string>(async str => throw new AbandonedMutexException("NO ACCESS!!"));
 
-            Activator.Handle<string>(async str =>
-            {
-                throw new AbandonedMutexException("NO ACCESS!!");
-            });
+        Handle<DateTime>(async dateTime => throw new AbandonedMutexException("WE DO NOT CARE BUT IT IS CLEARLY GONE!!!!"));
 
-            Activator.Handle<DateTime>(async dateTime =>
-            {
-                throw new AbandonedMutexException("WE DO NOT CARE BUT IT IS CLEARLY GONE!!!!");
-            });
+        await Bus.SendLocal("hej");
+        await Bus.SendLocal(DateTime.Now);
 
-            await Activator.Bus.SendLocal("hej");
-            await Activator.Bus.SendLocal(DateTime.Now);
+        await Task.Delay(2000);
 
-            await Task.Delay(2000);
+        var lines = LoggerFactory.ToList();
 
-            var lines = LoggerFactory.ToList();
-
-            Assert.That(lines.Any(l => l.Text.Contains("AbandonedMutexException")), Is.False);
-        }
+        Assert.That(lines.Any(l => l.Text.Contains("AbandonedMutexException")), Is.False);
     }
 }

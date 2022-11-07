@@ -16,4 +16,7 @@
 ## 4.0.2
 * Fix bug that would call event callbacks multiple times if the `.Events(..)` configuration had been applied more than once - thanks [dariogriffo]
 
+## 5.0.0
+* Update packages and modernize a bit
+
 [dariogriffo]: https://github.com/dariogriffo
