@@ -27,10 +27,12 @@ class MessageReceivedStep : IIncomingStep
         var message = context.Load<Message>();
         var args = new MessageHandledEventHandlerArgs();
         var bus = _lazyBus.Value;
+        var headers = message.Headers;
+        var body = message.Body;
 
         foreach (var e in _beforeMessageHandled)
         {
-            e(bus, message.Headers, message.Body, context, args);
+            e(bus, headers, body, context, args);
         }
 
         try
@@ -39,7 +41,7 @@ class MessageReceivedStep : IIncomingStep
 
             foreach (var e in _afterMessageHandled)
             {
-                e(bus, message.Headers, message.Body, context, args);
+                e(bus, headers, body, context, args);
             }
         }
         catch (Exception exception)
@@ -48,7 +50,7 @@ class MessageReceivedStep : IIncomingStep
 
             foreach (var e in _afterMessageHandled)
             {
-                e(bus, message.Headers, message.Body, context, args);
+                e(bus, headers, body, context, args);
             }
 
             if (!args.IgnoreException)
