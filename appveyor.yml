@@ -1,4 +1,4 @@
-image: Visual Studio 2019
+image: Visual Studio 2022
 
 shallow_clone: true
 
@@ -10,5 +10,7 @@ before_build:
   - appveyor-retry dotnet restore -v Minimal
 
 build_script:
-  - dotnet build Rebus.Events -c Release 
-  - dotnet build Rebus.Events.Tests -c Release 
+  - dotnet build -c Release 
+
+test_script:
+  - dotnet test -c Release 
