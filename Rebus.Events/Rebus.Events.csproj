@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk" ToolsVersion="15.0">
 	<PropertyGroup>
 		<OutputType>Library</OutputType>
-		<LangVersion>10</LangVersion>
+		<LangVersion>11</LangVersion>
 		<RootNamespace>Rebus</RootNamespace>
 		<TargetFramework>netstandard2.0</TargetFramework>
 		<Authors>mookid8000</Authors>
@@ -11,8 +11,21 @@
 		<PackageTags>rebus events</PackageTags>
 		<RepositoryUrl>https://github.com/rebus-org/Rebus</RepositoryUrl>
 		<RepositoryType>git</RepositoryType>
+		<PackageIcon>little_rebusbus2_copy-500x500.png</PackageIcon>
+		<PackageReadmeFile>README.md</PackageReadmeFile>
+		<PackageLicenseExpression>MIT</PackageLicenseExpression>
 	</PropertyGroup>
 	<ItemGroup>
-		<PackageReference Include="rebus" Version="6.0.0" />
+	  <None Include="..\artwork\little_rebusbus2_copy-500x500.png">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	  <None Include="..\README.md">
+	    <Pack>True</Pack>
+	    <PackagePath>\</PackagePath>
+	  </None>
+	</ItemGroup>
+	<ItemGroup>
+		<PackageReference Include="rebus" Version="8.0.0-alpha01" />
 	</ItemGroup>
 </Project>
